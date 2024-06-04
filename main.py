@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from  fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,6 +8,7 @@ from src.routes import contacts, auth
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
