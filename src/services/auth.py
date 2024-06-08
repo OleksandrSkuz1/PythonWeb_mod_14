@@ -4,14 +4,15 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from src.conf.config import config
 from src.database.db import get_db
 from src.repository import users as repository_users
 
+
 class Auth:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    SECRET_KEY = "9767c898328b8db36364cf1456b845d7f23442a0cc97a7c2d9e8c38d21135fb7"  # Replace with your secret key
-    ALGORITHM = "HS256"
+    SECRET_KEY = config.SECRET_KEY_JWT
+    ALGORITHM = config.ALGORITHM
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
     def verify_password(self, plain_password, hashed_password):

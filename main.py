@@ -1,17 +1,26 @@
+import redis.asyncio as redis
 from fastapi import FastAPI, Depends, HTTPException
 from  fastapi.staticfiles import StaticFiles
+from fastapi_limiter import FastAPILimiter
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_db
 from src.routes import contacts, auth
+from src.conf.config import config
+
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
+# app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
+
+@app.on_event("startup")
+async def startup():
+    r = await redis.Redis(host=config.REDIS_DOMAIN, port=config.REDIS_PORT, db=0, password=config.REDIS_PASSWORD)
+    await FastAPILimiter.init(r)
 
 @app.get("/")
 def index():
