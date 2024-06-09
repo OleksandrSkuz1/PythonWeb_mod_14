@@ -1,27 +1,19 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Path, Query
+from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.entity.models import User
-from src.schemas.user import UserResponse, UserSchema
-from src.services.auth import auth_service
 from src.database.db import get_db
-
-
-# router = APIRouter(prefix="/users", tags=["users"])
-#
-#
-# @router.get(path="/me", response_model=UserResponse)
-# async def get_current_user(user: UserSchema = Depends(auth_service.get_current_user)):
-#     return user
+from src.entity.models import User
+from src.schemas.user import UserSchema, UserResponse
+from src.services.auth import auth_service
 
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/signup", response_model=UserResponse)
-async def signup(user: UserSchema, db: AsyncSession = Depends(get_db)):
+@router.post("/me", response_model=UserResponse)
+async def create_user(user: UserSchema, db: AsyncSession = Depends(get_db)):
     async with db.begin():
         result = await db.execute(select(User).filter(User.email == user.email))
         db_user = result.scalar()
@@ -31,7 +23,7 @@ async def signup(user: UserSchema, db: AsyncSession = Depends(get_db)):
         new_user = User(
             username=user.username,
             email=user.email,
-            password=user.password  # Переконайтеся, що паролі хешуються перед збереженням
+            password=user.password
         )
         db.add(new_user)
 
@@ -43,3 +35,8 @@ async def signup(user: UserSchema, db: AsyncSession = Depends(get_db)):
                                 detail="Could not create user due to integrity error")
 
         return new_user
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(user: User = Depends(auth_service.get_current_user)):
+    return user
