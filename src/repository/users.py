@@ -8,11 +8,17 @@ from src.entity.models import User
 from src.schemas.user import UserSchema
 
 
-async def get_user_by_email(email: str, db: AsyncSession = Depends(get_db)):
-    stmt = select(User).filter_by(email=email)
-    user = await db.execute(stmt)
-    user = user.scalar_one_or_none()
+async def get_user_by_email(email: str, db: AsyncSession) -> User:
+    result = await db.execute(select(User).filter(User.email == email).limit(1))
+    user = result.unique().scalar_one_or_none()
     return user
+
+
+# async def get_user_by_email(email: str, db: AsyncSession = Depends(get_db)):
+#     stmt = select(User).filter_by(email=email)
+#     user = await db.execute(stmt)
+#     user = user.scalar_one_or_none()
+#     return user
 
 
 async def create_user(body: UserSchema, db: AsyncSession = Depends(get_db)):
