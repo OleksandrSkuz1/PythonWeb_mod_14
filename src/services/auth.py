@@ -1,5 +1,7 @@
+import pickle
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
+import redis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
@@ -8,12 +10,17 @@ from src.conf.config import config
 from src.database.db import get_db
 from src.repository import users as repository_users
 
-
 class Auth:
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     SECRET_KEY = config.SECRET_KEY_JWT
     ALGORITHM = config.ALGORITHM
     oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+    cache = redis.Redis(
+        host=config.REDIS_DOMAIN,
+        port=config.REDIS_PORT,
+        db=0,
+        password=config.REDIS_PASSWORD,
+    )
 
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
@@ -37,7 +44,7 @@ class Auth:
             expire = datetime.utcnow() + expires_delta
         else:
             expire = datetime.utcnow() + timedelta(days=7)
-        to_encode.update({"exp": expire})
+        to_encode.update({"exp": expire, "scope": "refresh_token"})
         encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 
@@ -65,9 +72,19 @@ class Auth:
         except JWTError:
             raise credentials_exception
 
-        user = await repository_users.get_user_by_email(email, db)
+        user_hash = str(email)
+        user = self.cache.get(user_hash)
+
         if user is None:
-            raise credentials_exception
+            print("User from database")
+            user = await repository_users.get_user_by_email(email, db)
+            if user is None:
+                raise credentials_exception
+            self.cache.set(user_hash, pickle.dumps(user))
+            self.cache.expire(user_hash, time=300)
+        else:
+            print("User from cache")
+            user = pickle.loads(user)
         return user
 
     def create_email_token(self, data: dict):
@@ -86,6 +103,5 @@ class Auth:
             print(e)
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                 detail="Invalid token for email verification")
-
 
 auth_service = Auth()

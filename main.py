@@ -1,11 +1,6 @@
-from ipaddress import ip_address
-
-from contextlib import asynccontextmanager
-from typing import Callable
-
 import redis.asyncio as redis
-from fastapi import FastAPI, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi_limiter import FastAPILimiter
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +22,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-# banned_ips = [ip_address("192.168.1.1"), ip_address("192.168.1.2"), ip_address("127.0.0.1")]
-
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -39,22 +32,15 @@ app.add_middleware(
 )
 
 
-# @app.middleware("http")
-# async def ban_ips(request: Request, call_next: Callable):
-#     ip = ip_address(request.client.host)
-#     if ip in banned_ips:
-#         return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": "You are banned"})
-#     response = await call_next(request)
-#     return response
-
-
 app.include_router(auth.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
 
+
 @app.get("/")
 def index():
     return {"message": "Contact Application"}
+
 
 @app.get("/api/healthchecker")
 async def healthchecker(db: AsyncSession = Depends(get_db)):
