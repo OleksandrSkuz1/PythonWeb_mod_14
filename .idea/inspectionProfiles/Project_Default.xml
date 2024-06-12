@@ -1,0 +1,45 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="6">
+            <item index="0" class="java.lang.String" itemvalue="sqlalchemy" />
+            <item index="1" class="java.lang.String" itemvalue="faker" />
+            <item index="2" class="java.lang.String" itemvalue="hyperlink" />
+            <item index="3" class="java.lang.String" itemvalue="requests-file" />
+            <item index="4" class="java.lang.String" itemvalue="automat" />
+            <item index="5" class="java.lang.String" itemvalue="incremental" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPep8Inspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredErrors">
+        <list>
+          <option value="E302" />
+          <option value="E303" />
+          <option value="E301" />
+          <option value="E262" />
+          <option value="E115" />
+          <option value="E265" />
+          <option value="E305" />
+          <option value="E502" />
+          <option value="E128" />
+          <option value="E113" />
+          <option value="E122" />
+          <option value="W292" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="str.exists" />
+          <option value="redis.client.Redis.__await__" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

@@ -16,6 +16,7 @@ async def get_contacts(limit: int, offset: int, db: AsyncSession):
     :param db: AsyncSession: Pass the database session to the function
     :return: A list of contact objects
     :doc-author: Trelent
+
     """
     stmt = select(Contact).offset(offset).limit(limit)
     contacts = await db.execute(stmt)
@@ -30,6 +31,7 @@ async def get_contact(contact_id: int, db: AsyncSession):
     :param db: AsyncSession: Pass the database session to the function
     :return: A contact object, which is a row from the contacts table
     :doc-author: Trelent
+
     """
     stmt = select(Contact).filter_by(id=contact_id)
     contact = await db.execute(stmt)
@@ -44,6 +46,7 @@ async def create_contact(body: ContactSchema, db: AsyncSession):
     :param db: AsyncSession: Pass the database session into the function
     :return: The contact object, which is a sqlalchemy model
     :doc-author: Trelent
+
     """
     contact_data = body.model_dump(exclude_unset=True)
     contact = Contact(**contact_data)

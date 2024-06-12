@@ -22,6 +22,19 @@ conf = ConnectionConfig(
 
 
 async def send_email(email: EmailStr, username: str, host: str):
+    """
+    The send_email function sends an email to the user with a link to verify their email address.
+        The function takes in three parameters:
+            -email: the user's email address, which is used as a recipient for the message and also as part of
+                the token verification payload. This parameter must be of type EmailStr (a custom class from pydantic)
+                so that it can be validated before being passed into this function. If validation fails, then an error will be raised by pydantic.
+
+    :param email: EmailStr: Validate the email address
+    :param username: str: Pass the username to the template
+    :param host: str: Pass the hostname of the server to the template
+    :return: A coroutine object
+    :doc-author: Trelent
+    """
     try:
         token_verification = auth_service.create_email_token({"sub": email})
         message = MessageSchema(
