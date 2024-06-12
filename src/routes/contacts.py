@@ -35,7 +35,7 @@ async def create_contact(body: ContactSchema, db: AsyncSession = Depends(get_db)
 
 
 @router.put("/{contact_id}")
-async def update_todo(body: ContactUpdateSchema, contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),
+async def update_contact(body: ContactUpdateSchema, contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),
                       user: User = Depends(auth_service.get_current_user)):
     contact = await repositories_contacts.update_contact(contact_id, body, db, user)
     if contact is None:
@@ -44,7 +44,7 @@ async def update_todo(body: ContactUpdateSchema, contact_id: int = Path(ge=1), d
 
 
 @router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_todo(contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),
+async def delete_contact(contact_id: int = Path(ge=1), db: AsyncSession = Depends(get_db),
                       user: User = Depends(auth_service.get_current_user)):
     contact = await repositories_contacts.delete_contact(contact_id, db, user)
     return contact
