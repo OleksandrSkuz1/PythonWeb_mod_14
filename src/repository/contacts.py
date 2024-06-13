@@ -3,95 +3,91 @@ from datetime import datetime, timedelta
 from sqlalchemy import select, or_, and_, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.entity.models import Contact
+from src.entity.models import Contact, User
 from src.schemas.contact import ContactSchema, ContactUpdateSchema
 
 
-async def get_contacts(limit: int, offset: int, db: AsyncSession):
+async def get_all_contacts(limit: int, offset: int, db: AsyncSession, user: User):
     """
-    The get_contacts function returns a list of contacts from the database.
+    The get_all_contacts function returns a list of contacts for the user.
 
     :param limit: int: Limit the number of contacts returned
-    :param offset: int: Specify the number of rows to skip before returning results
-    :param db: AsyncSession: Pass the database session to the function
-    :return: A list of contact objects
+    :param offset: int: Specify the number of records to skip
+    :param db: AsyncSession: Pass in the database session
+    :param user: User: Filter the contacts by user
+    :return: A list of contacts for a user
     :doc-author: Trelent
-
     """
-    stmt = select(Contact).offset(offset).limit(limit)
+    stmt = select(Contact).filter_by(user=user).offset(offset).limit(limit)
     contacts = await db.execute(stmt)
     return contacts.scalars().all()
 
 
-async def get_contact(contact_id: int, db: AsyncSession):
+async def get_contact(contact_id: int, db: AsyncSession, user: User):
     """
-    The get_contact function returns a contact object from the database.
+    The get_contact function returns a contact from the database.
 
     :param contact_id: int: Specify the id of the contact to be retrieved
     :param db: AsyncSession: Pass the database session to the function
-    :return: A contact object, which is a row from the contacts table
+    :param user: User: Ensure that the contact belongs to the user making the request
+    :return: A contact object
     :doc-author: Trelent
-
     """
-    stmt = select(Contact).filter_by(id=contact_id)
+    stmt = select(Contact).filter_by(id=contact_id, user=user)
     contact = await db.execute(stmt)
     return contact.scalar_one_or_none()
 
 
-async def create_contact(body: ContactSchema, db: AsyncSession):
+async def create_contact(body: ContactSchema, db: AsyncSession, user: User):
     """
     The create_contact function creates a new contact in the database.
 
-    :param body: ContactSchema: Validate the request body and convert it to a contact object
-    :param db: AsyncSession: Pass the database session into the function
-    :return: The contact object, which is a sqlalchemy model
+    :param body: ContactSchema: Validate the request body
+    :param db: AsyncSession: Pass a database session to the function
+    :param user: User: Get the user object from the request
+    :return: A contact object
     :doc-author: Trelent
-
     """
-    contact_data = body.model_dump(exclude_unset=True)
-    contact = Contact(**contact_data)
+    contact = Contact(**body.model_dump(exclude_unset=True), user=user)
     db.add(contact)
     await db.commit()
     await db.refresh(contact)
     return contact
 
 
-async def update_contact(contact_id: int, body: ContactUpdateSchema, db: AsyncSession):
+async def update_contact(contact_id: int, body: ContactUpdateSchema, db: AsyncSession, user: User):
     """
     The update_contact function updates a contact in the database.
 
-    :param contact_id: int: Specify the contact id to update
-    :param body: ContactUpdateSchema: Pass the data from the request body to the function
-    :param db: AsyncSession: Pass the database session to the function
-    :return: The contact object if it exists
-    :doc-author: Trelent
+    :param contact_id: int: Identify the contact to update
+    :param body: ContactUpdateSchema: Pass in the data that will be used to update the contact
+    :param db: AsyncSession: Pass in the database session to the function
+    :param user: User: Ensure that the user is only updating their own contacts
+    :return: A contact object, which is the same as what we get from the create_contact function
     """
-    stmt = select(Contact).filter_by(id=contact_id)
+    stmt = select(Contact).filter_by(id=contact_id, user=user)
     result = await db.execute(stmt)
-    contact = result.scalar_one_or_none()
+    contact = await result.scalar_one_or_none()
+
     if contact:
-        contact.first_name = body.first_name
-        contact.last_name = body.last_name
-        contact.email = body.email
-        contact.phone = body.phone
-        contact.birthday = body.birthday
-        contact.additional_data = body.additional_data
-        contact.completed = body.completed
-        await db.commit()
-        await db.refresh(contact)
+        # Update contact attributes based on body
+        for field, value in body.dict().items():
+            setattr(contact, field, value)
+
     return contact
 
 
-async def delete_contact(contact_id: int, db: AsyncSession):
+async def delete_contact(contact_id: int, db: AsyncSession, user: User):
     """
     The delete_contact function deletes a contact from the database.
 
-    :param contact_id: int: Identify the contact to be deleted
+    :param contact_id: int: Specify the id of the contact to be deleted
     :param db: AsyncSession: Pass the database session to the function
+    :param user: User: Make sure that the user is only deleting their own contacts
     :return: The contact that was deleted
     :doc-author: Trelent
     """
-    stmt = select(Contact).filter_by(id=contact_id)
+    stmt = select(Contact).filter_by(id=contact_id, user=user)
     contact = await db.execute(stmt)
     contact = contact.scalar_one_or_none()
     if contact:

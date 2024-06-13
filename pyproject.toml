@@ -26,6 +26,7 @@ python-dotenv = "^1.0.1"
 redis = "^5.0.4"
 fastapi-limiter = "^0.1.6"
 cloudinary = "^1.40.0"
+pytest = "^8.2.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -34,3 +35,10 @@ sphinx = "^7.3.7"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts = "--doctest-modules"
+testpaths = [
+    "tests", ]
+pythonpath = "."
+filterwarnings = "ignore::DeprecationWarning"

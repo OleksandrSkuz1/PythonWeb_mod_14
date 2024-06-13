@@ -24,6 +24,11 @@ class Contact(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
     user = relationship("User", backref=backref("contacts", lazy="joined"))
 
+    def equals(self, other):
+        if not isinstance(other, Contact):
+            return False
+        return self.__dict__ == other.__dict__
+
 # Клас для таблиці "users"
 class User(Base):
     __tablename__ = "users"
