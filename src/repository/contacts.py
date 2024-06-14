@@ -118,7 +118,15 @@ async def search_contacts(db: AsyncSession, query: str):
         ).scalars().all()
 
 
+
 async def get_upcoming_birthdays(db: AsyncSession):
+    """
+    The get_upcoming_birthdays function returns a list of contacts whose birthdays are within the next week.
+
+    :param db: AsyncSession: Pass in the database session
+    :return: A list of contact objects
+    :doc-author: Trelent
+    """
     today = datetime.today().date()
     next_week = today + timedelta(days=7)
 
