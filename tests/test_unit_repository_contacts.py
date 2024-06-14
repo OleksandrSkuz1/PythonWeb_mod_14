@@ -1,18 +1,32 @@
 import unittest
-from datetime import datetime
 from unittest.mock import MagicMock, AsyncMock
+
+from datetime import datetime, timedelta
+
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.schemas.contact import ContactSchema, ContactUpdateSchema
 from src.entity.models import Contact, User
 from src.repository.contacts import (
-    create_contact, get_all_contacts, get_contact, update_contact, delete_contact, search_contacts, get_upcoming_birthdays
+    create_contact,
+    get_all_contacts,
+    get_contact, update_contact,
+    delete_contact,
+    search_contacts,
+    get_upcoming_birthdays,
 )
-from src.schemas.contact import ContactSchema, ContactUpdateSchema
 
 
 class TestAsyncContact(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self) -> None:
-        self.user = User(id=1, username="test-user", password="qwerty")
+        self.user = User(id=1,
+                         username="test-user",
+                         password="password",
+                         email="test@user.com",
+                         confirmed=True,
+                         )
         self.session = AsyncMock(spec=AsyncSession)
 
     async def test_get_all_contacts(self):
@@ -130,34 +144,34 @@ class TestAsyncContact(unittest.IsolatedAsyncioTestCase):
 
     async def test_search_contacts(self):
         query = "test"
+
+        # Мокуємо результат запиту, який повертаємо з execute()
+        mocked_result = [
+            Contact(id=1, first_name='John', last_name='Doe', email='john.doe@example.com')
+        ]
+
+    async def test_get_upcoming_birthdays(self):
+        today = datetime.today().date()
+        next_week = today + timedelta(days=7)
         contacts = [
-            Contact(id=1, first_name='test_first_name_1', last_name='test_last_name_1', email='test1@test.com',
-                    user=self.user),
-            Contact(id=2, first_name='test_first_name_2', last_name='test_last_name_2', email='test2@test.com',
+            Contact(id=1, first_name='test_first_name_1', last_name='test_last_name_1', birthday=today, user=self.user),
+            Contact(id=2, first_name='test_first_name_2', last_name='test_last_name_2', birthday=next_week,
                     user=self.user)
         ]
 
-        # Мокований об'єкт результату запиту
+        # Вказуємо, що scalars повертає асинхронний результат
+        mocked_scalars = AsyncMock()
+        mocked_scalars.all.return_value = contacts
+
         mocked_result = MagicMock()
-        mocked_result.fetchall.return_value = contacts
+        mocked_result.scalars.return_value = mocked_scalars
+
         self.session.execute.return_value = mocked_result
 
-        # Виклик функції пошуку контактів
-        result = await search_contacts(self.session, query)
+        result = await get_upcoming_birthdays(self.session)
 
-        # Перевірка, що результат співпадає з очікуваними контактами
+        # Переконуємося, що результат збігається з очікуваним списком контактів
         self.assertEqual(result, contacts)
-
-    # async def test_get_upcoming_birthdays(self):
-    #     today = datetime.today().date()
-    #     next_week = today + timedelta(days=7)
-    #     contacts = [
-    #         Contact(id=1, first_name='test_first_name_1', last_name='test_last_name_1', birthday=today, user=self.user),
-    #         Contact(id=2, first_name='test_first_name_2', last_name='test_last_name_2', birthday=next_week, user=self.user)
-    #     ]
-    #     self.session.execute.return_value.fetchall.return_value = contacts
-    #     result = await get_upcoming_birthdays(self.session)
-    #     self.assertEqual(result, contacts)
 
 if __name__ == '__main__':
     unittest.main()

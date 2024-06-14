@@ -95,6 +95,7 @@ async def delete_contact(contact_id: int, db: AsyncSession, user: User):
         await db.commit()
     return contact
 
+
 async def search_contacts(db: AsyncSession, query: str):
     """
     The search_contacts function searches the database for contacts that match a given query.
@@ -116,31 +117,17 @@ async def search_contacts(db: AsyncSession, query: str):
             )
         ).scalars().all()
 
-async def get_upcoming_birthdays(db: AsyncSession):
-    """
-    The get_upcoming_birthdays function returns a list of contacts whose birthdays are within the next week.
 
-    :param db: AsyncSession: Pass in the database session
-    :return: A list of contact objects
-    :doc-author: Trelent
-    """
+async def get_upcoming_birthdays(db: AsyncSession):
     today = datetime.today().date()
     next_week = today + timedelta(days=7)
-    async with db.begin():
-        result = await db.execute(
-            select(Contact).filter(
-                or_(
-                    and_(
-                        extract("month", Contact.birthday) == today.month,
-                        extract("day", Contact.birthday) >= today.day,
-                        extract("day", Contact.birthday) <= next_week.day,
-                    ),
-                    and_(
-                        extract("month", Contact.birthday) == next_week.month,
-                        extract("day", Contact.birthday) >= today.day,
-                        extract("day", Contact.birthday) <= next_week.day,
-                    ),
-                )
+
+    result = await db.execute(
+        select(Contact).where(
+            and_(
+                Contact.birthday >= today,
+                Contact.birthday <= next_week
             )
         )
-        return result.scalars().all()
+    )
+    return await result.scalars().all()
