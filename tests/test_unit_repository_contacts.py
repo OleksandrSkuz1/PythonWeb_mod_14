@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, AsyncMock
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.contact import ContactSchema, ContactUpdateSchema
@@ -125,7 +124,6 @@ class TestAsyncContact(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(contact1.completed, contact2.completed)
         self.assertEqual(contact1.user, contact2.user)
 
-    # Псевдокод у вашому тесті
     async def test_delete_contact(self):
         # Підготовка даних
         mocked_contact = MagicMock()
@@ -144,8 +142,6 @@ class TestAsyncContact(unittest.IsolatedAsyncioTestCase):
 
     async def test_search_contacts(self):
         query = "test"
-
-        # Мокуємо результат запиту, який повертаємо з execute()
         mocked_result = [
             Contact(id=1, first_name='John', last_name='Doe', email='john.doe@example.com')
         ]
