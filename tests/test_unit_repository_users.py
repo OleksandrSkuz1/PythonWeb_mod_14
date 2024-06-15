@@ -47,7 +47,7 @@ class TestAsyncUser(unittest.IsolatedAsyncioTestCase):
         mock_gravatar_instance = MockGravatar.return_value
         mock_gravatar_instance.get_image.return_value = "avatar_url"
 
-        self.session.add = AsyncMock()
+        self.session.add = MagicMock()
         self.session.commit = AsyncMock()
         self.session.refresh = AsyncMock()
 

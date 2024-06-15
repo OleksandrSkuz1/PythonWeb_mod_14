@@ -8,7 +8,7 @@ from src.entity.models import User
 from src.schemas.user import UserSchema
 
 
-async def get_user_by_email(email: str, db: AsyncSession) -> User:
+async def get_user_by_email(email: str, db: AsyncSession) -> User | None:
     """
     The get_user_by_email function returns a user object from the database based on an email address.
 
@@ -17,34 +17,30 @@ async def get_user_by_email(email: str, db: AsyncSession) -> User:
     :return: A single user or none if no user is found
     :doc-author: Trelent
     """
-
-    result = await db.execute(select(User).filter(User.email == email).limit(1))
-    user = result.unique().scalar_one_or_none()
-    return user
+    result = await db.execute(select(User).filter(User.email == email))
+    return result.scalar_one_or_none()
 
 
-async def create_user(body: UserSchema, db: AsyncSession = Depends(get_db)):
+async def create_user(user_data, db: AsyncSession):
     """
     The create_user function creates a new user in the database.
 
-    :param body: UserSchema: Validate the request body
-    :param db: AsyncSession: Pass the database session to the function
+    :param user_data: UserSchema: Contains the user data to be created
+    :param db: AsyncSession: The database session to use for the operation
     :return: The newly created user object
     :doc-author: Trelent
     """
-
-    avatar = None
-    try:
-        g = Gravatar(body.email)
-        avatar = g.get_image()
-    except Exception as err:
-        print(err)
-
-    new_user = User(**body.model_dump(), avatar=avatar)
+    new_user = User(
+        username=user_data.username,
+        password=user_data.password,
+        email=user_data.email,
+        avatar="avatar_url"
+    )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
     return new_user
+
 
 async def update_token(user: User, token: str | None, db: AsyncSession):
     """
